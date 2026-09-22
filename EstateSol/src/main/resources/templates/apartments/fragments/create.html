@@ -1,0 +1,35 @@
+<div th:fragment="create">
+
+    <h3>Νέο Διαμέρισμα</h3>
+    
+    <div>
+    	<label>Περιοχή</label>
+    	<input type="text" id="area">
+	</div>
+
+    <div>
+        <label>Τετραγωνικά</label>
+        <input type="number" id="sqm">
+    </div>
+
+    <div>
+        <label>Όροφος</label>
+        <input type="number" id="floor">
+    </div>
+
+    <div>
+        <label>Κατάσταση</label>
+        <input type="text" id="condition">
+    </div>
+
+    <div>
+        <label>Φωτογραφία</label>
+        <input type="file" id="image">
+    </div>
+
+    <br>
+
+    <button onclick="createApartment()">Δημιουργία</button>
+
+    <div id="createStatus" style="margin-top:10px;"></div>
+</div>

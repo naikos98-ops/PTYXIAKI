@@ -1,0 +1,14 @@
+<div th:fragment="list">
+    <div th:each="apt : ${apartments}"
+         class="apartment-row"
+         th:data-id="${apt.id}">
+
+        <strong>#<span th:text="${apt.id}"></span></strong>
+        <span th:text="${apt.squareMeters}"></span> τ.μ.
+        -
+        <span th:text="${apt.area}"></span>
+        -
+        <span th:text="${apt.condition}"></span>
+
+    </div>
+</div>

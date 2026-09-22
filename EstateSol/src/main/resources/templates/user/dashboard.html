@@ -1,0 +1,220 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
+      
+      <head>
+      <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+      
+      
+      <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #8399A8;
+        }
+
+        .layout {
+            display: flex;
+            gap: 20px;
+        }
+
+        .left {
+            width: 30%;
+            border-right: 1px solid #ccc;
+        }
+
+        .right {
+            width: 70%;
+        }
+
+        .box {
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+        }
+
+        .apartment-row {
+            border-bottom: 1px solid #eee;
+            padding: 5px;
+            cursor: pointer;
+        }
+
+        .apartment-row:hover {
+            background-color: #f5f5f5;
+        }
+        
+		.user-panel {
+		    max-height: 350px;        
+		    overflow-y: auto;         
+		    border: 1px solid #ccc;
+		    padding: 10px;
+		    background: #fafafa;
+		}
+		.user-row {
+		    padding: 8px;
+		    border-bottom: 1px solid #ddd;
+		}
+		.user-row:last-child {
+		    border-bottom: none;
+		}
+    </style>
+</head>
+      </head>
+
+<body>
+
+<h1>User Dashboard</h1>
+
+<p>
+    Logged in as:
+    <strong sec:authentication="name"></strong>
+</p>
+
+<form th:action="@{/logout}" method="post">
+    <button type="submit">Logout</button>
+</form>
+
+<div th:if="${apartments.isEmpty()}">
+    <em>Δεν έχεις καταχωρήσει διαμερίσματα.</em>
+</div>
+
+<!-- <div th:each="apt : ${apartments}" style="border:1px solid #ccc; padding:10px; margin-bottom:10px;">
+
+    <p><strong>Περιοχή:</strong> <span th:text="${apt.area}"></span></p>
+    <p><strong>Τετραγωνικά:</strong> <span th:text="${apt.squareMeters}"></span></p>
+
+    <div th:if="${apt.aiProcessed}">
+        <p>Ενοίκιο: <strong th:text="${apt.estimatedRent}"></strong> €</p>
+        <p>Πώληση: <strong th:text="${apt.estimatedPrice}"></strong> €</p>
+    </div>
+
+    <div th:if="${!apt.aiProcessed}">
+        <em>AI Processing…</em>
+    </div>
+
+    <a th:href="@{/user/apartments/{id}(id=${apt.id})}">
+        Προβολή / Επεξεργασία
+    </a>
+
+</div>  -->
+
+<div class="layout">
+<button onclick="loadCreateForm()">+ Νέο Διαμέρισμα</button>
+
+    <!-- LEFT: LIST -->
+    <div class="left box">
+        <h3>All Apartments</h3>
+
+        <div id="apartmentList">
+            <!-- AJAX: apartment list -->
+            <em>Loading apartments...</em>
+        </div>
+    </div>
+
+    <!-- RIGHT: DETAILS / EDIT -->
+    <div class="right box">
+        <h3>Apartment Details</h3>
+
+        <div id="apartmentDetails">
+            <!-- AJAX: selected apartment -->
+            <em>Select an apartment</em>
+        </div>
+    </div>
+
+</div>
+
+
+
+<script>
+
+const csrfToken = $("meta[name='_csrf']").attr("content");
+const csrfHeader = $("meta[name='_csrf_header']").attr("content");
+
+
+
+$(document).ready(function () {
+    loadApartments();
+});
+
+
+function saveApartment() {
+    const id = $("#aptId").val();
+    
+    
+    $.post("/apartments/" + id + "/ajax", {
+    	area: $("#area").val(),
+        squareMeters: $("#sqm").val(),
+        floor: $("#floor").val(),
+        condition: $("#condition").val()
+    })
+    .done(function () {
+        $("#saveStatus").text("Αποθηκεύτηκε ✔").css("color", "green");
+        loadApartments(); // refresh list (αριστερά) 
+    })
+    .fail(function (xhr) {
+        $("#saveStatus").text("Σφάλμα: " + xhr.status).css("color", "red");
+    });
+}
+
+
+$(document).on("click", ".apartment-row", function () {
+    const id = $(this).data("id");
+    $("#apartmentDetails").load("/apartments/" + id + "/detailsFragment");
+}); 
+
+
+function loadApartments() {
+	$("#apartmentList").load("/apartments/allFragments");
+}
+
+function loadCreateForm() {
+    $("#apartmentDetails").load("/apartments/createFragment");
+}
+
+function createApartment() {
+
+    const formData = new FormData();
+    formData.append("area", $("#area").val());
+    formData.append("squareMeters", $("#sqm").val());
+    formData.append("floor", $("#floor").val());
+    formData.append("condition", $("#condition").val());
+    formData.append("image", $("#image")[0].files[0]);
+
+    // 🔑 ΚΡΙΣΙΜΟ
+    formData.append("_csrf", csrfToken);
+
+    $.ajax({
+        url: "/apartments/ajax",
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false
+    })
+    .done(function () {
+        $("#createStatus").text("Δημιουργήθηκε ✔").css("color", "green");
+        loadApartments();
+    })
+    .fail(function (xhr) {
+        $("#createStatus").text("Σφάλμα: " + xhr.status).css("color", "red");
+    });
+}
+    function deleteApartment() {
+	    const id = $("#aptId").val();
+	
+	    if (!confirm("Είσαι σίγουρος ότι θες να διαγράψεις το διαμέρισμα;")) {
+	        return;
+	    }
+	
+	    $.post("/apartments/" + id + "/deleteajax")
+	        .done(function () {
+	            $("#deleteStatus").text("Διαγράφηκε ✔").css("color", "green");
+	            $("#apartmentDetails").html("<em>Επιλέξτε διαμέρισμα</em>");
+	            loadApartments();
+	        })
+	        .fail(function (xhr) {
+	            $("#deleteStatus").text("Σφάλμα: " + xhr.status).css("color", "red");
+	        });
+	}
+
+</script>
+</body>
+</html>

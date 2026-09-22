@@ -1,0 +1,30 @@
+# Ignore environment variables
+.env
+.env.local
+
+# Maven build outputs
+**/target/
+**/target/**
+*.class
+
+# Node / Vue build outputs
+**/node_modules/
+**/dist/
+.eslintcache
+
+# OS/IDE files
+.DS_Store
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Ignore large tool binaries and upload images
+tools/
+uploads/
+
+
+.server-logs/
